@@ -27,6 +27,7 @@ ZIP bauen: `node tools/build-extension.mjs` → `dist/bahnkarte24-<version>.zip`
 > • Fahrten, bei denen du die BahnCard vergessen hast
 > • Vergleich: Was hätten dieselben Fahrten ohne BahnCard, mit BahnCard 25, 50 oder 100 gekostet?
 > • Statistiken: Kilometer, Stunden im Zug, Cent pro Kilometer, Lieblingsstrecke, meistgenutzte Züge, Ausgaben pro Monat
+> • Noch keine BahnCard? Dann siehst du, ob sich eine mit deinen bisherigen Fahrten gelohnt hätte – und welche.
 >
 > Datenschutz:
 > • Kein Server, kein Konto, kein Tracking – die Auswertung läuft komplett in deinem Browser.
