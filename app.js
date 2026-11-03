@@ -3,7 +3,6 @@
 // ---------------------------------------------------------------------------
 // Konstanten
 // ---------------------------------------------------------------------------
-const BAHN_ORIGIN = 'https://www.bahn.de';
 const STORE_KEY = 'sparschiene-daten';
 
 // Listenpreise laut bahn.de/angebot/bahncard/vergleich (Stand Oktober 2026), je Klasse und Kartenvariante.
@@ -54,70 +53,19 @@ function reset() {
 }
 
 // ---------------------------------------------------------------------------
-// Lesezeichen erzeugen
+// Nachrichten der Erweiterung während des Einlesens
 // ---------------------------------------------------------------------------
-async function setupBookmarklet() {
-  const link = $('#bookmarklet');
-  link.addEventListener('click', (e) => {
-    e.preventDefault();
-    alert('Zieh den Button in deine Lesezeichenleiste und klick ihn dann dort an.');
-  });
-  if (location.protocol === 'file:') {
-    $('#bookmarklet-hint').textContent = 'Hinweis: Die Seite muss über http(s) laufen (nicht als Datei geöffnet), damit das Lesezeichen funktioniert.';
-    return;
-  }
-  try {
-    const [src, core] = await Promise.all(['collector.js', 'core.js'].map(async (f) => (await fetch(f, { cache: 'no-cache' })).text()));
-    // Chrome entfernt Zeilenumbrüche aus Lesezeichen-URLs – dann würde ein //-Kommentar den ganzen Rest auskommentieren.
-    // Deshalb Kommentarzeilen raus und alles in eine Zeile (collector.js und core.js setzen überall Semikolons).
-    const eineZeile = (s) => s.split('\n').filter((l) => !/^\s*\/\//.test(l)).map((l) => l.trim()).filter(Boolean).join(' ');
-    const code = eineZeile(src)
-      .replace('/*__CORE__*/', () => eineZeile(core))
-      .replace("'__SITE__'", () => "'" + location.origin + location.pathname.replace(/\/index\.html$/, '').replace(/\/$/, '') + "'");
-    link.href = 'javascript:' + encodeURIComponent(code);
-  } catch (e) {
-    $('#bookmarklet-hint').textContent = 'Das Lesezeichen konnte nicht erzeugt werden. Bitte lade die Seite neu.';
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Datenempfang vom Lesezeichen
-// ---------------------------------------------------------------------------
-let pingTimer = null;
-
 function importNachricht(m) {
   if (m.type === 'bc-progress') {
     $('#import-text').textContent = m.text || '';
     const pct = m.total ? Math.max(3, Math.round((m.done / m.total) * 100)) : 3;
     $('#import-bar span').style.width = pct + '%';
   } else if (m.type === 'bc-error') {
-    clearInterval(pingTimer);
     $('#import-title').textContent = 'Das hat nicht geklappt';
     $('#import-text').textContent = m.text || 'Unbekannter Fehler.';
   } else if (m.type === 'bc-data') {
-    clearInterval(pingTimer);
     loadData(m, true);
   }
-}
-
-function startImport() {
-  show('view-import');
-  let received = false;
-  const ping = () => {
-    if (received || !window.opener) return;
-    try { window.opener.postMessage({ type: 'bc-ready' }, BAHN_ORIGIN); } catch (e) { /* Fenster weg */ }
-  };
-  ping();
-  pingTimer = setInterval(ping, 700);
-  if (!window.opener) {
-    $('#import-text').textContent = 'Diese Seite wurde nicht vom Lesezeichen geöffnet. Starte das Lesezeichen auf bahn.de.';
-  }
-
-  window.addEventListener('message', (e) => {
-    if (e.origin !== BAHN_ORIGIN || !e.data || typeof e.data !== 'object') return;
-    received = true;
-    importNachricht(e.data);
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -341,6 +289,47 @@ function setupKarten() {
     if (bc) kippe(bc, e);
   });
   document.addEventListener('pointerleave', () => { if (aktiv) aufrichten(aktiv); aktiv = null; });
+}
+
+// ---------------------------------------------------------------------------
+// Browser-Erweiterung: meldet sich per postMessage aus ihrem Content-Script (extension/site.js) auf dieser Seite.
+// ---------------------------------------------------------------------------
+// Adresse im Chrome Web Store. Solange leer, ist der Installieren-Button ausgegraut.
+const STORE_URL = '';
+
+function erweiterungStarten() {
+  show('view-import');
+  $('#import-title').textContent = 'Hole deine Fahrten von bahn.de …';
+  $('#import-text').textContent = 'Im bahn.de-Tab anmelden, dann geht es automatisch weiter.';
+  $('#import-bar span').style.width = '3%';
+  window.postMessage({ type: 'bc-ext-start' }, location.origin);
+}
+
+function setupErweiterung() {
+  const install = $('#btn-install');
+  if (STORE_URL) {
+    install.href = STORE_URL;
+  } else {
+    install.setAttribute('aria-disabled', 'true');
+    install.removeAttribute('href');
+    install.textContent = 'Bald im Chrome Web Store';
+  }
+
+  // Klick aufs Symbol der Erweiterung öffnet die Seite mit #erweiterung: dann gleich loslegen.
+  let autostart = location.hash === '#erweiterung';
+  if (autostart) history.replaceState(null, '', location.pathname + location.search);
+
+  window.addEventListener('message', (e) => {
+    if (e.source !== window || !e.data || e.data.quelle !== 'bc-erweiterung') return;
+    if (e.data.type === 'bc-ext-hallo') {
+      document.body.classList.add('has-ext');
+      if (autostart) { autostart = false; erweiterungStarten(); }
+    } else {
+      importNachricht(e.data);
+    }
+  });
+  $('#btn-ext').addEventListener('click', erweiterungStarten);
+  window.postMessage({ type: 'bc-ext-ping' }, location.origin);
 }
 
 function validData(d) {
@@ -945,19 +934,12 @@ function demoDaten(ohneKarte = false) {
 $('#btn-reset').addEventListener('click', reset);
 $('#btn-demo').addEventListener('click', () => loadData(demoDaten(), false));
 $('#btn-demo-ohne').addEventListener('click', () => loadData(demoDaten(true), false));
-$('#file-input').addEventListener('change', async (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
-  try { loadData(JSON.parse(await f.text()), true); } catch (err) { alert('Die Datei konnte nicht gelesen werden.'); }
-});
 
-setupBookmarklet();
+setupErweiterung();
 setupHero();
 setupKarten();
 
-if (location.hash === '#import') {
-  startImport();
-} else {
+{
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem(STORE_KEY)); } catch (e) { /* nichts */ }
   if (saved && validData(saved)) loadData(saved, false);

@@ -9,8 +9,7 @@
   <link rel="icon" href="icons/icon16.png?v=2" sizes="16x16">
   <link rel="apple-touch-icon" href="icons/icon128.png?v=2">
   <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=30">
-  <link rel="stylesheet" href="loop.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=32">
   <script src="theme.js?v=21"></script>
 </head>
 <body>
@@ -47,10 +46,12 @@
           </p>
 
           <div class="hero__actions">
-            <a class="btn btn--big" href="#so-gehts">Los geht's</a>
+            <button class="btn btn--big ext-only" id="btn-ext" type="button">Meine Fahrten von bahn.de holen</button>
+            <a class="btn btn--big no-ext" href="#so-gehts">Los geht's</a>
             <button class="btn btn--ghost btn--big" id="btn-demo" type="button">Demo-Auswertung</button>
           </div>
           <p class="hero__ohne small">Noch keine BahnCard? Wir rechnen mit deinen vergangenen Fahrten aus, ob sich eine gelohnt hätte. <button class="linkbtn" id="btn-demo-ohne" type="button">Demo-Auswertung ohne Karte</button></p>
+          <p class="hero__trust small muted ext-only">Öffnet bahn.de. Anmelden, den Rest erledigt die Erweiterung.</p>
         </div>
 
         <div class="hero__card" aria-hidden="true">
@@ -76,114 +77,28 @@
       <div class="wrap section">
       <section class="panel" id="so-gehts">
         <h2 class="h2">So einfach geht's</h2>
-        <div class="howto">
-          <div class="bk24" role="img" aria-label="Animation: Den Button „Bahnkarte24 holen“ in die Lesezeichenleiste ziehen, bei bahn.de anmelden, dann das Lesezeichen anklicken. Ergebnis: BahnCard 25, 41 Euro gespart.">
-            <div class="bk24-stage is-anim">
-              <div class="bk-bw">
-                <div class="bk-top">
-                  <div class="bk-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-                  <div class="bk-url">
-                    <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="5.2" width="7" height="5.3" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>
-                    <span class="bk-u1"><b>bahnkarte24.de</b></span>
-                    <span class="bk-u2"><b>bahn.de</b>/buchung/reiseuebersicht/vergangene</span>
-                  </div>
-                  <div class="bk-load"></div>
-                </div>
-                <div class="bk-bar">
-                  <div class="bk-caret"></div>
-                  <div class="bk-bm"><div class="bk-rip"></div><i></i><span>Bahnkarte24 holen</span></div>
-                </div>
-                <div class="bk-page">
-                  <div class="bk-site">
-                    <div class="bk-brand"><i></i><span class="bk-arch">Bahnkarte24</span></div>
-                    <div class="bk-nav"><span>So geht’s</span><span>FAQ</span></div>
-                    <div class="bk-hero">
-                      <h5 class="bk-arch">Hat sich deine BahnCard gelohnt?</h5>
-                      <p>Wir rechnen deine vergangenen Buchungen nach.</p>
-                    </div>
-                    <div class="bk-btn">
-                      <svg viewBox="0 0 8 12" aria-hidden="true"><g fill="currentColor"><circle cx="2" cy="2" r="1.1"></circle><circle cx="6" cy="2" r="1.1"></circle><circle cx="2" cy="6" r="1.1"></circle><circle cx="6" cy="6" r="1.1"></circle><circle cx="2" cy="10" r="1.1"></circle><circle cx="6" cy="10" r="1.1"></circle></g></svg>
-                      <span>Bahnkarte24 holen</span>
-                    </div>
-                  </div>
-                  <div class="bk-db">
-                    <div class="bk-dbh">
-                      <h5 class="bk-arch">Meine Reisen</h5>
-                      <div class="bk-in"><i></i><span>angemeldet</span></div>
-                    </div>
-                    <div class="bk-rows">
-                      <div class="bk-row"><span class="d">02.10.</span><span class="r">Köln → Berlin</span><span class="p">59,90 €</span><span class="bk-ok"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></div>
-                      <div class="bk-row"><span class="d">18.09.</span><span class="r">Hamburg → München</span><span class="p">112,40 €</span><span class="bk-ok"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></div>
-                      <div class="bk-row"><span class="d">27.08.</span><span class="r">Frankfurt → Leipzig</span><span class="p">74,20 €</span><span class="bk-ok"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></div>
-                      <div class="bk-row"><span class="d">03.08.</span><span class="r">Stuttgart → Köln</span><span class="p">48,90 €</span><span class="bk-ok"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></div>
-                    </div>
-                    <div class="bk-prog">
-                      <span class="bk-spin"></span>
-                      <span class="t">Buchungen werden gelesen … <span class="bk-cnt"><span class="bk-cnt-in"><span>0/12</span><span>3/12</span><span>6/12</span><span>9/12</span><span>12/12</span></span></span></span>
-                    </div>
-                  </div>
-                  <div class="bk-dim"></div>
-                </div>
-              </div>
-              <div class="bk-res">
-                <div class="bk-res-top">
-                  <div class="bk-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-                  <span>Bahnkarte24 · Auswertung</span>
-                </div>
-                <div class="bk-res-body">
-                  <div class="bk-card">
-                    <div class="bk-card-top"><b class="bk-arch">BahnCard 25</b><span>2. Klasse</span></div>
-                    <div>
-                      <div class="lbl">Ersparnis im Gültigkeitszeitraum</div>
-                      <div class="bk-num"><b class="bk-arch">+41 €</b><span>gespart</span></div>
-                    </div>
-                  </div>
-                  <div class="bk-meta"><span class="bk-ok"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span>12 Buchungen ausgewertet</span></div>
-                </div>
-              </div>
-              <div class="bk-capw">
-                <div class="bk-cap">
-                  <div class="bk-c1"><span class="n"><b class="bk-arch">1</b></span><span>Lesezeichen in die Leiste ziehen</span></div>
-                  <div class="bk-c2"><span class="n"><b class="bk-arch">2</b></span><span>Bei bahn.de anmelden</span></div>
-                  <div class="bk-c3"><span class="n"><b class="bk-arch">3</b></span><span>Lesezeichen anklicken</span></div>
-                </div>
-                <div class="bk-steps" aria-hidden="true"><i></i><i></i><i></i></div>
-              </div>
-              <div class="bk-cur" aria-hidden="true">
-                <div class="bk-btn bk-ghost">
-                  <svg viewBox="0 0 8 12" aria-hidden="true"><g fill="currentColor"><circle cx="2" cy="2" r="1.1"></circle><circle cx="6" cy="2" r="1.1"></circle><circle cx="2" cy="6" r="1.1"></circle><circle cx="6" cy="6" r="1.1"></circle><circle cx="2" cy="10" r="1.1"></circle><circle cx="6" cy="10" r="1.1"></circle></g></svg>
-                  <span>Bahnkarte24 holen</span>
-                </div>
-                <svg class="bk-arr" viewBox="0 0 17 24" aria-hidden="true"><path d="M1 1 L1 19 L5.5 14.8 L8.6 22 L11.4 20.8 L8.4 13.8 L14.5 13.8 Z" fill="#141920" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"></path></svg>
-              </div>
-            </div>
-          </div>
-          <div class="howto__side">
-            <p class="howto__label">Hier ziehen</p>
-            <a class="bookmarklet" id="bookmarklet" href="#" title="In die Lesezeichenleiste ziehen">Bahnkarte24 holen</a>
-            <p class="small muted" id="bookmarklet-hint">Keine Leiste zu sehen? <kbd>Strg</kbd> + <kbd>Umschalt</kbd> + <kbd>B</kbd></p>
-            <ol class="howto__steps">
-              <li>Lesezeichen in die Leiste ziehen</li>
-              <li>Lesezeichen anklicken – es öffnet bahn.de <a href="https://www.bahn.de/buchung/reiseuebersicht/vergangene" target="_blank" rel="noopener">Meine Reisen</a>. Dort anmelden.</li>
-              <li>Auf bahn.de das Lesezeichen noch einmal anklicken – ca. 2 Sekunden pro Buchung</li>
-            </ol>
-          </div>
-        </div>
+        <ol class="ext-schritte">
+          <li>
+            <h3 class="h3">Erweiterung installieren</h3>
+            <p>Kostenlos für Chrome, Edge und Brave. Einmal hinzufügen, fertig.</p>
+            <a class="btn no-ext" id="btn-install" href="#" target="_blank" rel="noopener">Zu Chrome hinzufügen</a>
+            <p class="ext-schritte__ok ext-only">Installiert</p>
+          </li>
+          <li>
+            <h3 class="h3">„Meine Fahrten holen“ klicken</h3>
+            <p>Oben auf dieser Seite oder auf das Bahnkarte24-Symbol in deiner Browserleiste.</p>
+          </li>
+          <li>
+            <h3 class="h3">Bei bahn.de anmelden</h3>
+            <p>bahn.de öffnet sich von selbst. Die Erweiterung liest deine Fahrten und bringt dich zur Auswertung zurück.</p>
+          </li>
+        </ol>
 
-        <div class="aside-row">
-          <details class="details">
-            <summary>Was macht das Lesezeichen genau?</summary>
-            <p>Es liest deine BahnCard und vergangenen Buchungen über dieselben Schnittstellen wie „Meine Reisen“. Übernommen werden nur Datum, Strecke, Tarif, Preis, Ersparnis und Züge – keine Namen, Adressen oder Zahlungsdaten.</p>
-            <p><a href="collector.js" target="_blank" rel="noopener">Quelltext ansehen</a></p>
-          </details>
-          <div class="upload">
-            <span class="small muted">Fenster blockiert? Das Lesezeichen hat eine Datei gespeichert.</span>
-            <label class="btn btn--ghost btn--small">
-              Datei laden
-              <input type="file" id="file-input" accept="application/json,.json" hidden>
-            </label>
-          </div>
-        </div>
+        <details class="details ext-genau">
+          <summary>Was macht die Erweiterung genau?</summary>
+          <p>Sie liest deine BahnCard und vergangenen Buchungen über dieselben Schnittstellen wie „Meine Reisen“ auf bahn.de – nur in dem Tab, den sie selbst öffnet. Übernommen werden nur Datum, Strecke, Tarif, Preis, Ersparnis und Züge, keine Namen, Adressen oder Zahlungsdaten. Sie ändert nichts an deinen Buchungen.</p>
+          <p><a href="https://github.com/xsebo99/Bahnkarte24/tree/main/extension" target="_blank" rel="noopener">Quelltext ansehen</a></p>
+        </details>
       </section>
       </div>
     </section>
@@ -198,7 +113,7 @@
           <div class="bc__amount">…</div>
         </div>
         <h1 class="h2" id="import-title">Hole deine Fahrten von bahn.de …</h1>
-        <p class="muted" id="import-text">Warte auf das Lesezeichen …</p>
+        <p class="muted" id="import-text">Warte auf die Erweiterung …</p>
         <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="import-bar"><span></span></div>
         <p class="small muted">Lass den bahn.de-Tab offen, bis die Auswertung erscheint.</p>
       </div></div>
@@ -256,6 +171,6 @@
   </footer>
 
   <div class="tooltip hidden" id="tooltip" role="tooltip"></div>
-  <script src="app.js?v=35"></script>
+  <script src="app.js?v=37"></script>
 </body>
 </html>
