@@ -295,7 +295,7 @@ function setupKarten() {
 // Browser-Erweiterung: meldet sich per postMessage aus ihrem Content-Script (extension/site.js) auf dieser Seite.
 // ---------------------------------------------------------------------------
 // Adresse im Chrome Web Store. Solange leer, ist der Installieren-Button ausgegraut.
-const STORE_URL = '';
+const STORE_URL = 'https://chromewebstore.google.com/detail/bahnkarte24/jcombjmagiampkphhfcbebdnabdacmij';
 
 function erweiterungStarten() {
   show('view-import');
