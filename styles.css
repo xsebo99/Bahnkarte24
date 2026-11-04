@@ -357,10 +357,6 @@ kbd { background: var(--fahrkarte); border: 1px solid var(--kante); border-botto
 .importing { max-width: 640px; margin: clamp(32px, 6vw, 72px) auto 0; text-align: center; }
 .progress { height: 6px; background: var(--schotter); border-radius: 999px; overflow: hidden; margin: 28px auto; max-width: 400px; }
 .progress span { display: block; height: 100%; width: 3%; background: var(--tinte); border-radius: 999px; transition: width 400ms var(--ease); }
-/* Erklärung, warum das Einlesen dauert – ruhig, unter dem Fortschritt */
-.warum { max-width: 440px; margin: 32px auto 0; padding-top: 20px; border-top: 1px solid var(--kante); font-size: var(--t-meta); color: var(--tinte-2); text-align: left; }
-.warum p { margin: 0; }
-.warum__titel { font-weight: 650; color: var(--tinte); margin-bottom: 4px !important; }
 
 /* Ergebnis */
 .result { display: grid; gap: 20px; padding-top: 24px; }
