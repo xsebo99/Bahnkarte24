@@ -294,8 +294,45 @@ function setupKarten() {
 // ---------------------------------------------------------------------------
 // Browser-Erweiterung: meldet sich per postMessage aus ihrem Content-Script (extension/site.js) auf dieser Seite.
 // ---------------------------------------------------------------------------
-// Adresse im Chrome Web Store. Solange leer, ist der Installieren-Button ausgegraut.
+// Adressen in den Stores. Solange leer, ist der Installieren-Button ausgegraut.
 const STORE_URL = 'https://chromewebstore.google.com/detail/bahnkarte24/jcombjmagiampkphhfcbebdnabdacmij';
+const FIREFOX_URL = 'https://addons.mozilla.org/de/firefox/addon/bahnkarte24/';
+const FIREFOX_ANDROID_URL = 'https://play.google.com/store/apps/details?id=org.mozilla.firefox';
+
+// Erweiterungen gibt es am Rechner in Chrome, Edge, Brave und Firefox, am Handy nur in Firefox für Android.
+// Auf iPhone und iPad laufen alle Browser mit Safari-Technik – dort geht es gar nicht.
+function browserArt() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+  const android = /Android/.test(ua);
+  if (/Firefox\//.test(ua)) return android ? 'firefox-android' : 'firefox';
+  if (android || /Mobi/.test(ua)) return 'handy';
+  if (/Safari\//.test(ua) && !/Chrome\/|Chromium\/|Edg\//.test(ua)) return 'safari';
+  return 'chrome';
+}
+
+// Hinweis oben und Text, Button-Beschriftung und Ziel bei Schritt 1 – je nach Browser
+const BROWSER = {
+  chrome: { url: STORE_URL, knopf: 'Zu Chrome hinzufügen' },
+  firefox: { url: FIREFOX_URL, knopf: 'Zu Firefox hinzufügen', text: 'Kostenlos für Firefox. Einmal hinzufügen, fertig.' },
+  'firefox-android': {
+    url: FIREFOX_URL, knopf: 'Zu Firefox hinzufügen', text: 'Kostenlos für Firefox. Einmal hinzufügen, fertig.',
+    hinweis: '<strong>Mit Firefox auch am Handy.</strong> Alle Daten bleiben bei dir.',
+  },
+  handy: {
+    url: FIREFOX_ANDROID_URL, knopf: 'Firefox für Android holen',
+    text: 'Am Handy klappt es nur mit Firefox – dort die Erweiterung hinzufügen und diese Seite in Firefox öffnen. Oder am PC mit Chrome, Edge, Brave oder Firefox.',
+    hinweis: '<strong>Am Handy nur mit Firefox.</strong> Oder am PC oder Laptop.',
+  },
+  safari: {
+    text: 'Mit Safari geht es leider nicht. Öffne diese Seite in Chrome, Edge, Brave oder Firefox.',
+    hinweis: '<strong>Nicht mit Safari.</strong> Nimm Chrome, Edge, Brave oder Firefox.',
+  },
+  ios: {
+    text: 'Auf iPhone und iPad geht es leider nicht. Öffne diese Seite am PC oder Laptop mit Chrome, Edge, Brave oder Firefox. Die Demo-Auswertung kannst du dir schon hier ansehen.',
+    hinweis: '<strong>Nicht auf iPhone und iPad.</strong> Am PC oder Laptop geht es.',
+  },
+};
 
 function erweiterungStarten() {
   show('view-import');
@@ -307,8 +344,16 @@ function erweiterungStarten() {
 
 function setupErweiterung() {
   const install = $('#btn-install');
-  if (STORE_URL) {
-    install.href = STORE_URL;
+  const b = BROWSER[browserArt()];
+  // Mit ? – eine zwischengespeicherte alte index.html ohne diese Stellen soll den Rest nicht aufhalten
+  const hinweis = $('#geraet-text'), text = $('#install-text');
+  if (b.hinweis && hinweis) hinweis.innerHTML = b.hinweis;
+  if (b.text && text) text.textContent = b.text;
+  if (b.knopf) install.textContent = b.knopf;
+  if (!('url' in b)) {
+    install.remove();
+  } else if (b.url) {
+    install.href = b.url;
   } else {
     install.setAttribute('aria-disabled', 'true');
     install.removeAttribute('href');
