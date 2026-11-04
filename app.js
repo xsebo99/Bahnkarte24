@@ -55,14 +55,57 @@ function reset() {
 // ---------------------------------------------------------------------------
 // Nachrichten der Erweiterung während des Einlesens
 // ---------------------------------------------------------------------------
+// Die Ladekarte: Solange die Zahl der Aufträge noch nicht feststeht, pulsiert sie.
+// Danach füllt sie sich mit dem echten Fortschritt, und die Fallblätter zählen die gelesenen Aufträge.
+function ladekarteZuruecksetzen() {
+  const bc = $('#import-bc');
+  bc.classList.remove('bc--zaehlt', 'bc--minus');
+  bc.style.removeProperty('--fill');
+  for (const z of $('#import-flap').children) { clearInterval(z._flap); z._soll = null; z.textContent = ' '; }
+  $('#import-bc-text').textContent = 'Warte auf bahn.de';
+  $('#import-bc-pct').textContent = '';
+}
+
+// Wie flapZu, aber nur die Zellen, deren Ziffer sich ändert, und mit wenigen Blättern –
+// die Zahl ändert sich ja mehrmals pro Sekunde.
+function flapZahl(el, n) {
+  const zellen = [...el.children];
+  const ziel = String(n).padStart(zellen.length, ' ').slice(-zellen.length);
+  zellen.forEach((zelle, i) => {
+    if (zelle._soll === ziel[i]) return;
+    zelle._soll = ziel[i];
+    clearInterval(zelle._flap);
+    if (RUHIG.matches) { zelle.textContent = ziel[i]; return; }
+    let schritte = 3;
+    zelle._flap = setInterval(() => {
+      zelle.textContent = --schritte > 0 ? String(Math.floor(Math.random() * 10)) : ziel[i];
+      if (schritte <= 0) clearInterval(zelle._flap);
+      if (zelle.animate) zelle.animate([{ transform: 'scaleY(1)' }, { transform: 'scaleY(.35)', filter: 'brightness(.6)' }, { transform: 'scaleY(1)' }], { duration: 90, easing: 'ease-out' });
+    }, 90);
+  });
+}
+
 function importNachricht(m) {
   if (m.type === 'bc-progress') {
     $('#import-text').textContent = m.text || '';
     const pct = m.total ? Math.max(3, Math.round((m.done / m.total) * 100)) : 3;
     $('#import-bar span').style.width = pct + '%';
+    if (m.total) {
+      const bc = $('#import-bc');
+      bc.classList.add('bc--zaehlt');
+      bc.style.setProperty('--fill', (m.done / m.total).toFixed(3));
+      flapZahl($('#import-flap'), m.done);
+      $('#import-bc-text').textContent = `von ${m.total} Aufträgen`;
+      $('#import-bc-pct').textContent = Math.round((m.done / m.total) * 100) + ' %';
+    }
   } else if (m.type === 'bc-error') {
     $('#import-title').textContent = 'Das hat nicht geklappt';
     $('#import-text').textContent = m.text || 'Unbekannter Fehler.';
+    const bc = $('#import-bc');
+    bc.classList.add('bc--zaehlt', 'bc--minus');
+    bc.style.setProperty('--fill', '1');
+    $('#import-bc-text').textContent = 'Abgebrochen';
+    $('#import-bc-pct').textContent = '';
   } else if (m.type === 'bc-data') {
     loadData(m, true);
   }
@@ -339,6 +382,7 @@ function erweiterungStarten() {
   $('#import-title').textContent = 'Hole deine Fahrten von bahn.de …';
   $('#import-text').textContent = 'Im bahn.de-Tab anmelden, dann geht es automatisch weiter.';
   $('#import-bar span').style.width = '3%';
+  ladekarteZuruecksetzen();
   window.postMessage({ type: 'bc-ext-start' }, location.origin);
 }
 
