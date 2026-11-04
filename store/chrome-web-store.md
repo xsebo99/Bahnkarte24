@@ -86,3 +86,4 @@ Alle drei Zusicherungen bestätigen:
 1. `version` in `extension/manifest.json` erhöhen (z. B. 0.1.1).
 2. `node tools/build-extension.mjs`
 3. Im Dashboard unter „Paket“ die neue ZIP hochladen und zur Prüfung einreichen.
+4. Für Firefox dieselbe Version mit der `-firefox.zip` einreichen, siehe [firefox-addons.md](firefox-addons.md).
