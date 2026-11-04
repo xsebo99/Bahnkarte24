@@ -7,19 +7,44 @@ async function bcSammeln(token, step) {
   const H = { accept: 'application/json', Authorization: 'Bearer ' + token };
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  // bahn.de begrenzt die Anfragen pro Zeit (HTTP 429) – deshalb langsam und mit Backoff.
+  // bahn.de begrenzt die Anfragen pro Zeit (HTTP 429). Wir fangen ohne Pause an; bremst bahn.de,
+  // kommt vor jede Anfrage eine Pause und es läuft nur noch eine gleichzeitig (gebremst).
+  // Nach einigen Antworten in Folge ohne Bremse wird die Pause kürzer und es geht wieder parallel.
+  let pause = 0, gebremst = false, ruhig = 0;
   async function get(path) {
-    let wait = 2000;
-    for (let i = 0; i < 7; i++) {
+    let wait = 1000;
+    for (let i = 0; i < 8; i++) {
+      if (pause) await sleep(pause);
       const r = await fetch(API + path, { headers: H });
-      if (r.ok) return r.json();
+      if (r.ok) {
+        pause = pause > 100 ? Math.round(pause * 0.85) : 0;
+        if (++ruhig >= 8) gebremst = false;
+        return r.json();
+      }
       if (r.status === 401 || r.status === 403) throw new Error('Deine Sitzung auf bahn.de ist abgelaufen. Bitte neu anmelden und nochmal versuchen.');
-      if (r.status !== 429 && r.status < 500) throw new Error('bahn.de hat mit Fehler ' + r.status + ' geantwortet.');
+      if (r.status !== 429 && r.status < 500) throw Object.assign(new Error('bahn.de hat mit Fehler ' + r.status + ' geantwortet.'), { status: r.status });
+      gebremst = true;
+      ruhig = 0;
+      pause = Math.min(Math.max(pause * 2, 400), 5000);
       step({ text: 'bahn.de bremst kurz – warte ' + Math.round(wait / 1000) + ' s …' });
       await sleep(wait);
       wait = Math.min(wait * 2, 30000);
     }
     throw new Error('bahn.de antwortet gerade nicht. Bitte später nochmal versuchen.');
+  }
+
+  // Bis zu n Anfragen gleichzeitig; solange bahn.de bremst, arbeitet nur der erste, die anderen warten.
+  async function parallel(n, anzahl, fn) {
+    let naechster = 0, fehler = null;
+    const arbeiter = async (k) => {
+      while (!fehler && naechster < anzahl) {
+        if (gebremst && k > 0) { await sleep(300); continue; }
+        const i = naechster++;
+        try { await fn(i); } catch (e) { fehler = e; }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(n, anzahl) }, (_, k) => arbeiter(k)));
+    if (fehler) throw fehler;
   }
 
   // Koordinaten stecken in der Halt-ID: "A=1@O=Bonn Hbf@X=7097136@Y=50732008@…" (Mikrograd).
@@ -95,7 +120,6 @@ async function bcSammeln(token, step) {
     ab: b.gueltigAb,
     bis: b.gueltigBis,
   }));
-  await sleep(800);
 
   step({ text: 'Lese dein Kundenkonto …' });
   const konto = await get('/kundenkonto/v2');
@@ -106,20 +130,30 @@ async function bcSammeln(token, step) {
   const grenze = new Date(frueheste || Date.now() - 730 * 864e5);
   grenze.setDate(grenze.getDate() - 7);
 
+  // Reiseliste in großen Seiten; nimmt bahn.de die Größe nicht an, geht es mit 10 weiter.
+  // Weiter geht es um so viele, wie wirklich kamen – falls bahn.de die Seitengröße still kürzt.
   const liste = [];
   const jetzt = new Date().toISOString();
+  let groesse = 50;
   for (const pid of profile) {
     let start = 0;
-    for (let seite = 0; seite < 50; seite++) {
+    for (let seite = 0; seite < 250; seite++) {
       step({ text: 'Lese Reiseliste (' + liste.length + ' Aufträge) …' });
-      const j = await get('/buchung/auftrag/v2?startIndex=' + start + '&auftraegeReturnSize=10&auftragSortOrder=DESCENDING&letzterGeltungszeitpunktVor=' +
-        encodeURIComponent(jetzt) + '&kundenprofilId=' + encodeURIComponent(pid));
+      const pfad = () => '/buchung/auftrag/v2?startIndex=' + start + '&auftraegeReturnSize=' + groesse + '&auftragSortOrder=DESCENDING&letzterGeltungszeitpunktVor=' +
+        encodeURIComponent(jetzt) + '&kundenprofilId=' + encodeURIComponent(pid);
+      let j;
+      try {
+        j = await get(pfad());
+      } catch (e) {
+        if (!e.status || groesse === 10) throw e;
+        groesse = 10;
+        j = await get(pfad());
+      }
       const neu = j.auftraege || [];
       liste.push(...neu);
       const aeltester = neu.map((a) => (a.gesamtreisen || [])[0]).map((g) => g && g.hinfahrt && g.hinfahrt.abfahrt).filter(Boolean).sort()[0];
-      if (!j.hasMoreAuftraege || (aeltester && new Date(aeltester) < grenze)) break;
-      start += 10;
-      await sleep(800);
+      if (!j.hasMoreAuftraege || !neu.length || (aeltester && new Date(aeltester) < grenze)) break;
+      start += neu.length;
     }
   }
 
@@ -129,22 +163,25 @@ async function bcSammeln(token, step) {
   }));
   const nummern = [...new Set(relevant.map((a) => a.auftragsnummer))];
 
-  const auftraege = [];
-  for (let i = 0; i < nummern.length; i++) {
-    step({ done: i, total: nummern.length, text: 'Lese Auftrag ' + (i + 1) + ' von ' + nummern.length + ' …' });
+  // Aufträge zu dritt gleichzeitig; die Reihenfolge bleibt die der Liste.
+  const auftraege = new Array(nummern.length);
+  let fertig = 0;
+  step({ done: 0, total: nummern.length, text: 'Lese ' + nummern.length + ' Aufträge …' });
+  await parallel(3, nummern.length, async (i) => {
     const nr = nummern[i];
     const d = await get('/buchung/auftrag/' + encodeURIComponent(nr));
     const l = relevant.find((a) => a.auftragsnummer === nr) || {};
     const lg = (l.gesamtreisen || [])[0] || {};
     const ga = d.gesamtangebot || {};
-    auftraege.push({
+    auftraege[i] = {
       nr: String(nr).slice(-4),
       gebucht: d.anlagedatum || l.anlagedatum || null,
       gesamtpreis: d.gesamtpreis ? d.gesamtpreis.betrag : 0,
       reisen: [reise('hin', ga.hinfahrt, lg.hinfahrt), reise('rueck', ga.rueckfahrt, lg.rueckfahrt)].filter(Boolean),
-    });
-    if (i < nummern.length - 1) await sleep(1500);
-  }
+    };
+    fertig++;
+    step({ done: fertig, total: nummern.length, text: 'Lese Auftrag ' + fertig + ' von ' + nummern.length + ' …' });
+  });
 
   step({ done: nummern.length, total: nummern.length, text: 'Fertig!' });
   return { type: 'bc-data', version: 1, abgerufen: new Date().toISOString(), bahncards, auftraege };

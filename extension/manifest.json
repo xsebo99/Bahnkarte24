@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bahnkarte24",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Prüft mit deinen echten bahn.de-Fahrten, ob sich deine BahnCard gelohnt hat. Ein Klick, nichts verlässt deinen Browser.",
   "homepage_url": "https://bahnkarte24.de/",
   "icons": {
