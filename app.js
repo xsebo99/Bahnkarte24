@@ -296,7 +296,7 @@ function setupKarten() {
 // ---------------------------------------------------------------------------
 // Adressen in den Stores. Solange leer, ist der Installieren-Button ausgegraut.
 const STORE_URL = 'https://chromewebstore.google.com/detail/bahnkarte24/jcombjmagiampkphhfcbebdnabdacmij';
-const FIREFOX_URL = 'https://addons.mozilla.org/de/firefox/addon/bahnkarte24/';
+const FIREFOX_URL = 'https://addons.mozilla.org/firefox/addon/bahnkarte24/';
 const FIREFOX_ANDROID_URL = 'https://play.google.com/store/apps/details?id=org.mozilla.firefox';
 
 // Erweiterungen gibt es am Rechner in Chrome, Edge, Brave und Firefox, am Handy nur in Firefox für Android.
