@@ -40,7 +40,7 @@
   }
 
   try {
-    const daten = await bcSammeln(t, step);
+    const daten = await bcSammeln(() => token() || t, step);
     zeigen('Fertig! Du wirst zur Auswertung zurückgebracht …');
     chrome.runtime.sendMessage(daten);
   } catch (err) {

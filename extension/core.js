@@ -2,26 +2,45 @@
 // Kopie für die Erweiterung: extension/core.js (node tools/build-extension.mjs kopiert sie mit).
 // Läuft auf www.bahn.de mit dem Login-Token aus sessionStorage. Liest BahnCard(s) und vergangene Aufträge
 // über die Schnittstellen, die bahn.de selbst nutzt, und reduziert sie auf das Nötige (keine Namen, Adressen, E-Mails).
+// token: entweder der Token selbst oder eine Funktion, die den aktuellen Token liefert.
+// bahn.de tauscht den kurzlebigen Token während der Sitzung regelmäßig aus; mit einer Funktion
+// nehmen wir bei jeder Anfrage den frischesten und überstehen so auch lange Läufe.
 async function bcSammeln(token, step) {
   const API = 'https://www.bahn.de/web/api';
-  const H = { accept: 'application/json', Authorization: 'Bearer ' + token };
+  const aktuellerToken = typeof token === 'function' ? token : () => token;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Nach einer 401/403: bis zu 60 s warten, ob bahn.de einen neuen Token hinterlegt.
+  async function neuerToken(alt) {
+    for (let s = 0; s < 60; s++) {
+      const t = aktuellerToken();
+      if (t && t !== alt) return true;
+      if (s === 3) step({ text: 'Sitzung wird erneuert …' });
+      await sleep(1000);
+    }
+    return false;
+  }
 
   // bahn.de begrenzt die Anfragen pro Zeit (HTTP 429). Wir fangen ohne Pause an; bremst bahn.de,
   // kommt vor jede Anfrage eine Pause und es läuft nur noch eine gleichzeitig (gebremst).
   // Nach einigen Antworten in Folge ohne Bremse wird die Pause kürzer und es geht wieder parallel.
   let pause = 0, gebremst = false, ruhig = 0;
   async function get(path) {
-    let wait = 1000;
+    let wait = 1000, erneuert = 0;
     for (let i = 0; i < 8; i++) {
       if (pause) await sleep(pause);
-      const r = await fetch(API + path, { headers: H });
+      const t = aktuellerToken();
+      const r = await fetch(API + path, { headers: { accept: 'application/json', Authorization: 'Bearer ' + t } });
       if (r.ok) {
         pause = pause > 100 ? Math.round(pause * 0.85) : 0;
         if (++ruhig >= 8) gebremst = false;
         return r.json();
       }
-      if (r.status === 401 || r.status === 403) throw new Error('Deine Sitzung auf bahn.de ist abgelaufen. Bitte neu anmelden und nochmal versuchen.');
+      if (r.status === 401 || r.status === 403) {
+        // Zuerst nachsehen, ob bahn.de inzwischen einen neuen Token hat; erst dann aufgeben.
+        if (erneuert++ < 3 && (aktuellerToken() !== t || await neuerToken(t))) { i--; continue; }
+        throw new Error('Deine Sitzung auf bahn.de ist abgelaufen. Bitte neu anmelden und nochmal versuchen.');
+      }
       if (r.status !== 429 && r.status < 500) throw Object.assign(new Error('bahn.de hat mit Fehler ' + r.status + ' geantwortet.'), { status: r.status });
       gebremst = true;
       ruhig = 0;
