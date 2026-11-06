@@ -302,6 +302,8 @@ kbd { background: var(--fahrkarte); border: 1px solid var(--kante); border-botto
 }
 .bc__typnr { display: inline-block; }
 .bc__type { font-weight: 650; font-stretch: 90%; font-size: clamp(.85rem, 1.7vw, 1.05rem); letter-spacing: .01em; }
+.bc__saldo { align-self: center; }
+.bc__label { font-family: var(--font-text); font-size: clamp(.72rem, 1.4vw, .85rem); font-weight: 600; opacity: .88; margin-bottom: .35em; }
 .bc__amount {
   align-self: center; font-weight: 800; font-stretch: 72%; letter-spacing: -.03em; line-height: 1;
   font-size: clamp(3rem, 9vw, 5.6rem); font-variant-numeric: tabular-nums;

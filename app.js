@@ -709,7 +709,7 @@ function render() {
         <div class="bc__fill"></div>
         <div class="bc__glanz"></div>
         <div class="bc__top"><span class="bc__logo">%</span><span class="bc__type">${esc(name)}, ${klasse}. Klasse</span><span class="bc__klasse">gedacht</span></div>
-        <div class="bc__amount">${zahl('netto', netto, 'saldo')}</div>
+        <div class="bc__saldo"><div class="bc__label">${plus ? 'Insgesamt gespart' : 'Insgesamt draufgezahlt'}</div><div class="bc__amount">${zahl('netto', netto, 'saldo')}</div></div>
         <div class="bc__bottom"><span>${faktor > 1 ? 'aufs Jahr gerechnet' : `${datum(von)} – ${datum(bis)}`}</span><span class="bc__pct">${prozent} %</span></div>
       </div>
       <div>
@@ -738,7 +738,7 @@ function render() {
         <div class="bc__fill"></div>
         <div class="bc__glanz"></div>
         <div class="bc__top"><span class="bc__logo">%</span><span class="bc__type">${esc(name)}</span></div>
-        <div class="bc__amount">${zahl('netto', netto, 'saldo')}</div>
+        <div class="bc__saldo"><div class="bc__label">${plus ? 'Insgesamt gespart' : 'Insgesamt draufgezahlt'}</div><div class="bc__amount">${zahl('netto', netto, 'saldo')}</div></div>
         <div class="bc__bottom"><span>${datum(von)} – ${datum(bis)}</span><span class="bc__pct">${prozent} %</span></div>
       </div>
       <div>
