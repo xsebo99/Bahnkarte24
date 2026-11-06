@@ -809,6 +809,7 @@ function render() {
       <div>
         <div class="beleg__label">Mit der Bahn gefahren</div>
         <div class="beleg__zahl">${zahl('km', km, 'int')} km</div>
+        ${kmVergleichHtml(km)}
         <div class="beleg__sub">
           <span><strong>${zahl('fahrten', liste.length, 'int')}</strong> Fahrten</span>
           <span><strong>${zahl('stunden', Math.round(stunden), 'int')} h</strong> im Zug</span>
@@ -852,6 +853,35 @@ function render() {
   // Karte erst leer zeichnen, dann füllen – beim ersten Anzeigen sieht man sie volllaufen.
   const bc = root.querySelector('.bc[data-fill]');
   if (bc) requestAnimationFrame(() => requestAnimationFrame(() => bc.style.setProperty('--fill', bc.dataset.fill)));
+}
+
+// Kilometer zum Anfassen: die Strecke in Dinge umgerechnet, die man sich vorstellen kann.
+function kmVergleiche(km) {
+  const f = (n) => n.toLocaleString('de-DE', { maximumFractionDigits: n < 10 ? 1 : 0 });
+  // Ab knapp 1 als „x-mal …“, darunter als Anteil
+  const mal = (ganz, teil) => (n) => n >= 1.05 ? `${f(n)}-mal ${ganz}` : n >= 0.95 ? `einmal ${ganz}` : `${f(n * 100)} % ${teil}`;
+  const v = [
+    ['🗺️', km / 1000, mal('von Flensburg bis Garmisch', 'der Strecke Flensburg–Garmisch')],
+    ['🌍', km / 40075, mal('um die Erde', 'einer Erdumrundung')],
+    ['🌕', km / 384400, mal('bis zum Mond', 'des Wegs zum Mond')],
+    ['🧱', km / 21196, mal('die Chinesische Mauer entlang', 'der Chinesischen Mauer')],
+    ['🌊', km / 1233, mal('den ganzen Rhein hinunter', 'des Rheins')],
+    ['🏃', km / 42.195, (n) => `${f(n)} Marathons – ohne einen Schritt zu laufen`],
+    ['🚶', km / 5 / 24, (n) => `${f(n)} Tage zu Fuß, ohne Pause`],
+    ['🚄', km / 0.374, (n) => `${f(n)} ICE-Zuglängen hintereinander`],
+    ['⛽', km * 0.07, (n) => `${f(n)} Liter Sprit, die ein Auto verbraucht hätte`],
+  ];
+  // Nur, was sich gut liest: weder winzige Bruchteile noch absurde Riesenzahlen
+  return v.filter(([, n]) => n >= 0.02 && n < 100000).map(([icon, n, text]) => `${icon} Das sind ${text(n)}`);
+}
+
+function kmVergleichHtml(km) {
+  if (!km) return '';
+  const liste = kmVergleiche(km);
+  if (!liste.length) return '';
+  return `<button type="button" class="beleg__vergleich" data-vergleiche="${esc(JSON.stringify(liste))}" data-i="0" title="Nächster Vergleich">
+    <span class="beleg__vergleich-text">${esc(liste[0])}</span>${liste.length > 1 ? '<span class="beleg__vergleich-mehr" aria-hidden="true">↻</span>' : ''}
+  </button>`;
 }
 
 function schwellenText(liste, preise, faktor) {
@@ -979,6 +1009,14 @@ function chartMonate(liste, von, bis) {
 
 // --- Interaktion -------------------------------------------------------------
 function bind(root) {
+  root.querySelectorAll('.beleg__vergleich').forEach((btn) => btn.addEventListener('click', () => {
+    const liste = JSON.parse(btn.dataset.vergleiche);
+    const i = (+btn.dataset.i + 1) % liste.length;
+    btn.dataset.i = i;
+    const t = btn.querySelector('.beleg__vergleich-text');
+    t.classList.remove('neu'); void t.offsetWidth; t.classList.add('neu');
+    t.textContent = liste[i];
+  }));
   const sel = $('#sel-card', root);
   if (sel) sel.addEventListener('change', () => { state.cardIdx = sel.value === GESAMT ? GESAMT : +sel.value; state.preise = {}; render(); });
   const selV = $('#sel-variante', root);

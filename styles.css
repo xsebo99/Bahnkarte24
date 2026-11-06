@@ -450,6 +450,13 @@ kbd { background: var(--fahrkarte); border: 1px solid var(--kante); border-botto
 .beleg { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
 .beleg__label { font-size: var(--t-klein); color: var(--tinte-2); }
 .beleg__zahl { font: 800 clamp(48px, 7vw, 88px)/1 var(--font-display); font-stretch: 70%; letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin: 6px 0 12px; }
+.beleg__vergleich { display: inline-flex; align-items: center; gap: 8px; margin: -4px 0 14px; padding: 4px 10px; border: 1px dashed var(--punktlinie); border-radius: 999px; background: none; color: var(--tinte-2); font: inherit; font-size: var(--t-klein); text-align: left; cursor: pointer; }
+.beleg__vergleich:hover { color: var(--tinte); border-style: solid; }
+.beleg__vergleich-mehr { color: var(--tinte-3); transition: transform .3s; }
+.beleg__vergleich:hover .beleg__vergleich-mehr { transform: rotate(180deg); }
+.beleg__vergleich-text.neu { animation: vergleich-neu .3s ease-out; }
+@keyframes vergleich-neu { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .beleg__vergleich-text.neu { animation: none; } }
 .beleg__sub { display: flex; flex-wrap: wrap; gap: 6px 20px; color: var(--tinte-2); font-size: var(--t-klein); }
 .beleg__sub strong { color: var(--tinte); font-variant-numeric: tabular-nums; }
 .posten { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
