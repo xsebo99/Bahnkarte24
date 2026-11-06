@@ -42,6 +42,7 @@ function show(view) {
   for (const id of ['view-start', 'view-import', 'view-result']) $('#' + id).classList.toggle('hidden', id !== view);
   $('#btn-reset').classList.toggle('hidden', view === 'view-start');
   $('#info-seite').classList.toggle('hidden', view === 'view-import');
+  $('#trinkgeld').classList.toggle('hidden', view !== 'view-result');
   $('#faq').classList.toggle('hidden', view === 'view-import');
   window.scrollTo({ top: 0 });
 }
