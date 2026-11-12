@@ -48,6 +48,8 @@ function show(view) {
 }
 
 function reset() {
+  // Gespeicherte Fahrten löschen – auch eine ältere Kopie aus der Zeit, als nur der Tab sie hielt
+  try { localStorage.removeItem(STORE_KEY); } catch (e) { /* egal */ }
   try { sessionStorage.removeItem(STORE_KEY); } catch (e) { /* egal */ }
   history.replaceState(null, '', location.pathname);
   show('view-start');
@@ -432,7 +434,10 @@ function loadData(d, persist) {
     return;
   }
   if (persist) {
-    try { sessionStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) { /* zu groß oder gesperrt – egal */ }
+    // Bleibt in diesem Browser, bis „Neu starten“ – so muss man die Fahrten nicht jedes Mal neu holen
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) {
+      try { sessionStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e2) { /* zu groß oder gesperrt – egal */ }
+    }
   }
   history.replaceState(null, '', location.pathname + '#auswertung');
   state.data = d;
@@ -841,7 +846,7 @@ function render() {
       </tr>`).join('') || '<tr><td colspan="5" class="muted">Keine Fahrten in diesem Zeitraum.</td></tr>'}</tbody>
     </table></div>
   </details>
-  <p class="stand">Stand: ${datum(d.abgerufen)} · ${d.demo ? 'Demo-Daten' : 'Daten von bahn.de'} · stornierte Fahrten ausgeblendet</p>
+  <p class="stand">Stand: ${datum(d.abgerufen)} · ${d.demo ? 'Demo-Daten' : 'Daten von bahn.de, in diesem Browser gespeichert – „Neu starten“ löscht sie'} · stornierte Fahrten ausgeblendet</p>
   </div>`;
 
   const root = $('#view-result');
@@ -1111,6 +1116,7 @@ setupKarten();
 
 {
   let saved = null;
-  try { saved = JSON.parse(sessionStorage.getItem(STORE_KEY)); } catch (e) { /* nichts */ }
+  try { saved = JSON.parse(localStorage.getItem(STORE_KEY)); } catch (e) { /* nichts */ }
+  if (!saved) try { saved = JSON.parse(sessionStorage.getItem(STORE_KEY)); } catch (e) { /* nichts */ }
   if (saved && validData(saved)) loadData(saved, false);
 }
